@@ -1,11 +1,14 @@
 #!/usr/bin/env node
 // Applies the GitHub settings this project relies on, from project.config.json, and asks for the secret
 // values that are missing. Safe to run again: each step checks what is there and only changes what differs.
-// Run it on your own machine with the GitHub CLI logged in as the repository's owner (`gh auth status`):
+// Run it on your own machine with the GitHub CLI logged in (`gh auth status`) as an admin of the repo:
 //
-//   node scripts/github-setup.mjs              everything below
-//   node scripts/github-setup.mjs --dry-run    print the steps, change nothing
-//   node scripts/github-setup.mjs --no-secrets skip the secret prompts
+//   node scripts/github-setup.mjs                 everything below, as gh's active account
+//   node scripts/github-setup.mjs --user <login>  as another account gh is logged in to
+//   node scripts/github-setup.mjs --dry-run       print the steps, change nothing
+//   node scripts/github-setup.mjs --no-secrets    skip the secret prompts
+//
+// It first checks that the account is an admin of the repository, and stops if not.
 //
 // 1. Repository: delete branches after merge; no auto-merge; secret scanning and push protection;
 //    Dependabot alerts and security updates.
@@ -26,13 +29,19 @@ import process from 'node:process';
 import { createInterface } from 'node:readline/promises';
 
 const ROOT = process.cwd();
-const args = new Set(process.argv.slice(2));
+const argv = process.argv.slice(2);
+const args = new Set(argv);
 const DRY = args.has('--dry-run');
 const SECRETS = !args.has('--no-secrets');
+const userAt = argv.indexOf('--user');
+const USER = userAt >= 0 ? argv[userAt + 1] : undefined;
+/** The environment for every gh call: with --user, that account's token (gh keeps it; we never print it). */
+let ghEnv = process.env;
 let warnings = 0;
 
 function gh(argv, input) {
   return execFileSync('gh', argv, {
+    env: ghEnv,
     encoding: 'utf8',
     input: input === undefined ? undefined : JSON.stringify(input),
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -132,6 +141,7 @@ async function askSecrets(repo, environments) {
         rl.pause();
         // gh prompts for the value itself and hides what is typed or pasted.
         const r = spawnSync('gh', ['secret', 'set', name, '--env', env, '--repo', repo], {
+          env: ghEnv,
           stdio: 'inherit',
         });
         rl.resume();
@@ -146,9 +156,43 @@ async function askSecrets(repo, environments) {
   }
 }
 
+/** Picks the account (--user) and stops unless it is an admin of the repository. */
+function checkAccount(repo) {
+  if (USER !== undefined) {
+    if (!/^[A-Za-z0-9-]+$/.test(USER ?? '')) throw new Error('--user needs a GitHub login.');
+    let token;
+    try {
+      token = execFileSync('gh', ['auth', 'token', '--user', USER], {
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }).trim();
+    } catch {
+      throw new Error(`gh is not logged in as ${USER}. Run: gh auth login`);
+    }
+    ghEnv = { ...process.env, GH_TOKEN: token };
+  }
+  const login = api('GET', 'user').login;
+  let admin = false;
+  try {
+    admin = api('GET', `repos/${repo}`).permissions?.admin === true;
+  } catch {
+    // Not visible to this account at all.
+  }
+  if (!admin) {
+    const owner = repo.split('/')[0];
+    throw new Error(
+      `gh is using the account ${login}, which is not an admin of ${repo}.\n` +
+        `Run it as an admin, for example: node scripts/github-setup.mjs --user ${owner}\n` +
+        `(gh auth status lists the accounts gh is logged in to.)`,
+    );
+  }
+  console.log(`As ${login} (admin of ${repo}).`);
+}
+
 async function main() {
   const config = loadConfig();
   const repo = config.repo;
+  checkAccount(repo);
   const r = `repos/${repo}`;
   console.log(`GitHub setup for ${repo}${DRY ? ' (dry run)' : ''}\n`);
 
