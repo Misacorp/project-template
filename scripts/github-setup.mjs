@@ -5,7 +5,7 @@
 //
 //   node scripts/github-setup.mjs              everything below
 //   node scripts/github-setup.mjs --dry-run    print the steps, change nothing
-//   node scripts/github-setup.mjs --no-secrets skip the secret and variable prompts
+//   node scripts/github-setup.mjs --no-secrets skip the secret prompts
 //
 // 1. Repository: delete branches after merge; no auto-merge; secret scanning and push protection;
 //    Dependabot alerts and security updates.
@@ -14,7 +14,7 @@
 // 3. A ruleset on the default branch: pull request required, the `ci` check required and up to date,
 //    no force push, no deletion, nobody bypasses.
 // 4. The environments in project.config.json. production deploys only from main; staging from any branch.
-// 5. Secrets and variables: each one the config lists and the environment lacks is asked for. The value
+// 5. Secrets: each one the config lists and the environment lacks is asked for. The value
 //    goes from your terminal to `gh` (which hides what you type), never through this script or a chat.
 //
 // A step that GitHub refuses (some settings need a paid plan on private repositories) is a warning, and
@@ -113,13 +113,11 @@ async function askSecrets(repo, environments) {
   const rl = createInterface({ input: process.stdin, output: process.stdout });
   try {
     for (const [env, entry] of Object.entries(environments)) {
-      const have = (kind) =>
-        new Set(
-          JSON.parse(gh([kind, 'list', '--env', env, '--repo', repo, '--json', 'name'])).map(
-            (s) => s.name,
-          ),
-        );
-      const secrets = have('secret');
+      const secrets = new Set(
+        JSON.parse(gh(['secret', 'list', '--env', env, '--repo', repo, '--json', 'name'])).map(
+          (s) => s.name,
+        ),
+      );
       for (const name of entry.secrets ?? []) {
         if (secrets.has(name)) {
           console.log(
@@ -141,14 +139,6 @@ async function askSecrets(repo, environments) {
           warnings += 1;
           console.log(`  WARN:  ${env} secret ${name} was not set.`);
         }
-      }
-      const variables = have('variable');
-      for (const name of entry.variables ?? []) {
-        if (variables.has(name)) continue;
-        const value = (
-          await rl.question(`  ${env}: variable ${name} (not secret; empty skips): `)
-        ).trim();
-        if (value) gh(['variable', 'set', name, '--env', env, '--repo', repo, '--body', value]);
       }
     }
   } finally {
@@ -229,7 +219,7 @@ async function main() {
   }
 
   if (SECRETS && envs.length && !DRY) {
-    console.log('Secrets and variables');
+    console.log('Secrets');
     await askSecrets(repo, config.environments);
   }
 

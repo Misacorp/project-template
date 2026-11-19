@@ -85,7 +85,6 @@ export function buildConfig(answers) {
       deploysFrom: env === 'production' ? 'push to main' : 'manual run',
       branches: env === 'production' ? ['main'] : [],
       secrets: [],
-      variables: [],
     };
     if (stack === 'cloudflare-web') {
       const host =
