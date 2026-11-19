@@ -8,7 +8,7 @@ Priorities, how the owner and agents work, naming and tone.
 
 ID: `2026-11-19-squash-merges-only-the-pr-title` · Status: current
 
-**Decision.** The repository allows only squash merges, and a squash takes the PR title as the commit title and the PR description as the commit body (`scripts/github-setup.mjs` sets both). So agents write the title and description as a commit message for history: what changed and why, as short as the change allows, with no test steps, check reports, review notes or generated-by footers. Anything only needed before the merge goes to the owner in chat, or in a PR comment.
+**Decision.** The repository allows only squash merges, and a squash takes the PR title as the commit title and the PR description as the commit body (`scripts/github-setup.mjs` sets both). So agents write the title and description as a commit message for history: what changed and why, as short as the change allows, with no test steps, check reports, review notes, generated-by footers or `Co-Authored-By:` trailers. Anything only needed before the merge goes to the owner in chat, or in a PR comment.
 
 **Reasoning.** The owner merges agents' PRs but already knows what was done from the session, so long descriptions went unread, and GitHub's default squash message is a list of every branch commit. One concise commit per PR keeps `git log` on `main` readable as a list of features and fixes.
 
