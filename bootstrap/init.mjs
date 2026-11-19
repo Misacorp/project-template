@@ -47,6 +47,7 @@ const USAGE = `Usage: node bootstrap/init.mjs [options]
   --slug <slug>              short lowercase name for packages and workers (default: from the name)
   --owner <name>             the owner's name, as agents address them in CLAUDE.md
   --github <login>           the owner's GitHub login for CODEOWNERS (default: the repo owner)
+  --commit-email <email>     the email agents commit with, as the owner (their GitHub no-reply address)
   --repo <owner/name>        the GitHub repository (default: from git remote origin)
   --environments <set>       ${Object.keys(ENVIRONMENT_SETS).join(' | ')}
   --stack <stack>            ${STACKS.join(' | ')}
@@ -102,12 +103,23 @@ function choice(options) {
   };
 }
 
+/** The owner defaults kept in bootstrap/owner.json, if it is there. */
+function ownerDefaults() {
+  try {
+    return JSON.parse(readFileSync(join(ROOT, 'bootstrap', 'owner.json'), 'utf8'));
+  } catch {
+    return {};
+  }
+}
+
 async function gather(flags) {
+  const owner = ownerDefaults();
   const answers = {
     name: flags.name,
     slug: flags.slug,
-    ownerName: flags.owner,
-    ownerGithub: flags.github,
+    ownerName: flags.owner ?? owner.name,
+    ownerGithub: flags.github ?? owner.github,
+    commitEmail: flags['commit-email'] ?? owner.commitEmail,
     repo: flags.repo ?? repoFromRemote(git(['remote', 'get-url', 'origin'])),
     environments: flags.environments ?? 'production',
     stack: flags.stack ?? 'none',
@@ -131,6 +143,11 @@ async function gather(flags) {
       "Owner's GitHub login (CODEOWNERS)",
       answers.ownerGithub ?? answers.repo.split('/')[0],
     );
+    console.log(
+      '\nAgents commit as the owner, so a squash merge adds no Co-authored-by line. Use your GitHub\n' +
+        'no-reply address (GitHub, Settings, Emails: <id>+<login>@users.noreply.github.com).',
+    );
+    answers.commitEmail = await ask(rl, 'Commit email (empty: decide later)', answers.commitEmail);
     console.log(
       '\nEnvironments: "production" deploys every merge to main. "production,staging" adds a staging\n' +
         'environment that only a manual run of the deploy workflow updates, from any branch.',

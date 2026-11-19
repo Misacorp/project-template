@@ -10,7 +10,7 @@ A starting point for new projects: the process, CI, security and agent tooling f
 - **Agent setup** (`CLAUDE.md`, `.claude/`): working rules for the owner and agents, three subagents (implementer, researcher without a shell, helper), deny rules for secrets, deploys, merges and network tools, and hooks for decisions and retros.
 - **Decisions log** (`docs/design/decisions/`, `node scripts/decisions.mjs`): one file per topic, a generated index, and a baseline of decisions that carried over from earlier projects.
 - **Security baseline** (`docs/security.md`) and **GitHub setup** (`scripts/github-setup.mjs`): rulesets, environments, Actions settings, secret scanning, and prompts for each missing secret.
-- **One commit per PR on `main`:** only squash merges, which take the PR title and description as the commit. `CLAUDE.md` tells agents to write those as history (what changed and why), not as review notes.
+- **One commit per PR on `main`:** only squash merges, which take the PR title and description as the commit. `CLAUDE.md` tells agents to write those as history (what changed and why), not as review notes. Agents commit as the owner (a hook sets the identity) and footers are removed automatically, so the commit has no attribution noise.
 - **Optional stack** (`bootstrap/stacks/cloudflare-web/`): the web app, the deploy workflow (merge to main deploys production; a manual run deploys staging), and a script and skill that read back which commit is live.
 
 ## Start a project

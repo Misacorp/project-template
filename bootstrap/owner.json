@@ -1,0 +1,6 @@
+{
+  "$comment": "Defaults for the owner questions of bootstrap/init.mjs, and the commit identity agents use in the template itself (.claude/hooks/git-identity.mjs). Removed with bootstrap/; a project keeps these in project.config.json.",
+  "name": "Misa",
+  "github": "Misacorp",
+  "commitEmail": "5681847+Misacorp@users.noreply.github.com"
+}

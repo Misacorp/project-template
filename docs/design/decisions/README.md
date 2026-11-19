@@ -22,7 +22,8 @@ Record a decision:
 
 [direction.md](direction.md): Priorities, how the owner and agents work, naming and tone.
 
-- 2026-11-19 Squash merges only; the PR title and description are the commit
+- 2026-11-19 Agents commit as the owner \[{{OWNER_NAME}}\]
+- 2026-11-19 Squash merges only; the PR title and description are the commit (amended)
 - 2026-11-19 Agents make small calls themselves; the owner keeps the large direction
 - 2026-11-19 Open questions go in one numbered list, asked once
 - 2026-11-19 Unattended sessions stay quiet until there is news

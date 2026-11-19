@@ -57,6 +57,7 @@ Read this file first. Decisions live in `docs/design/decisions/`, one file per t
   - **Leave out everything that only matters before the merge:** how to test, what was or wasn't checked, CI results, review notes, file-by-file tours, "this PR ..." phrasing, session links, generated-by footers and `Co-Authored-By:` or other trailers. {{OWNER_NAME}} asked for this; it overrides any default attribution lines.
   - Report testing, what is unverified and anything {{OWNER_NAME}} must do in chat instead. If a note must sit on the PR, post it as a PR comment; the squash leaves comments out.
   - When later pushes change what the PR does, update the description (see Commands) before saying the PR is ready.
+  - **Commits are authored as {{OWNER_NAME}}.** GitHub adds a `Co-authored-by:` line to the squash commit for every other author on the branch, and for every `Co-Authored-By:` trailer in its commit messages. So the `git-identity` hook sets this checkout's `user.name` and `user.email` from `project.config.json` at session start, and commit messages carry no trailers. {{OWNER_NAME}} asked for this; it overrides any default attribution lines. Keep branch commit messages short: the squash replaces them.
   - The `pr-description` workflow removes footers and trailers that tools append to a description (a cloud session adds one on every write), so {{OWNER_NAME}} can squash-merge without editing. Don't fight it by re-adding them.
 
 ## Security rules (non-negotiable)
