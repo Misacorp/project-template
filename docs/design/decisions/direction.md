@@ -4,9 +4,17 @@ Priorities, how the owner and agents work, naming and tone.
 
 <!-- Maintained with `node scripts/decisions.mjs`; see README.md. Newest first. -->
 
+## 2026-11-19: Agents commit as the owner **[{{OWNER_NAME}}]**
+
+ID: `2026-11-19-agents-commit-as-the-owner` · Status: current · Amends: `2026-11-19-squash-merges-only-the-pr-title`
+
+**Decision.** Agents' commits are authored as the owner: a SessionStart hook sets the checkout's `user.name` and `user.email` to the owner's GitHub login and no-reply address (`owner.commitEmail` in `project.config.json`). Commit messages and PR descriptions carry no `Co-Authored-By:` or other trailers.
+
+**Reasoning.** GitHub adds a `Co-authored-by:` line to a squash commit for every branch commit author other than the person merging and for every co-author trailer, and no setting turns that off. The owner wants the history on `main` to be the PR title and description only, and accepts that commits no longer show which were agent-made.
+
 ## 2026-11-19: Squash merges only; the PR title and description are the commit
 
-ID: `2026-11-19-squash-merges-only-the-pr-title` · Status: current
+ID: `2026-11-19-squash-merges-only-the-pr-title` · Status: current, amended by `2026-11-19-agents-commit-as-the-owner`
 
 **Decision.** The repository allows only squash merges, and a squash takes the PR title as the commit title and the PR description as the commit body (`scripts/github-setup.mjs` sets both). So agents write the title and description as a commit message for history: what changed and why, as short as the change allows, with no test steps, check reports, review notes, generated-by footers or `Co-Authored-By:` trailers. Anything only needed before the merge goes to the owner in chat, or in a PR comment.
 

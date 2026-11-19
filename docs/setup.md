@@ -4,6 +4,13 @@ One-time steps that only {{OWNER_NAME}} can do, written when the project was boo
 
 - [ ] **GitHub settings.** On your own machine, from the repo root: `node scripts/github-setup.mjs --user {{OWNER_GITHUB}}`. It protects `main`, makes merges squash-only with the PR title and description as the commit, locks down Actions, turns on secret scanning and creates the environments. Re-run it after changing `project.config.json`.
 - [ ] **Claude's access to this repository.** If the Claude GitHub App is limited to selected repositories: GitHub, Settings, Applications, Claude, Configure, Repository access, add `{{REPO}}`. Without it, cloud sessions can read but not push.
+
+<!-- @if !commit-email -->
+
+- [ ] **Commit email for agents.** Add `"commitEmail"` with your GitHub no-reply address (GitHub, Settings, Emails: `<id>+{{OWNER_GITHUB}}@users.noreply.github.com`) under `owner` in `project.config.json`. Agents then commit as you, and squash merges get no `Co-authored-by` line.
+
+<!-- @endif -->
+
 - [ ] **What the project is.** Tell an agent in a paragraph; it fills the TODOs in `CLAUDE.md`, `README.md` and `docs/progress.md`.
 
 <!-- @if cloudflare-web -->

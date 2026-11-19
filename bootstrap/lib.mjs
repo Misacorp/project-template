@@ -68,6 +68,10 @@ export function buildConfig(answers) {
     throw new UserError(`"${repo}" is not a GitHub repository (owner/name).`);
   }
   const ownerGithub = (answers.ownerGithub ?? '').trim() || repo.split('/')[0];
+  const commitEmail = (answers.commitEmail ?? '').trim();
+  if (commitEmail && !/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(commitEmail)) {
+    throw new UserError(`"${commitEmail}" is not an email address.`);
+  }
   const stack = answers.stack ?? 'none';
   if (!STACKS.includes(stack)) {
     throw new UserError(`Unknown stack "${stack}". Choose one of: ${STACKS.join(', ')}.`);
@@ -108,7 +112,7 @@ export function buildConfig(answers) {
     name,
     slug,
     repo,
-    owner: { name: ownerName, github: ownerGithub },
+    owner: { name: ownerName, github: ownerGithub, ...(commitEmail ? { commitEmail } : {}) },
     stack,
     created: answers.today ?? new Date().toISOString().slice(0, 10),
     environments,
@@ -120,6 +124,7 @@ export function flagsFor(config) {
   return {
     staging: 'staging' in config.environments,
     stack: config.stack !== 'none',
+    'commit-email': Boolean(config.owner.commitEmail),
     [config.stack]: true,
   };
 }
