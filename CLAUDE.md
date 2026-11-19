@@ -15,6 +15,7 @@ Read this file first. Decisions live in `docs/design/decisions/`, one file per t
 - The owner is **{{OWNER_NAME}}**. They read PR titles and descriptions, test the running app, and merge. Agents own security, correctness and tests.
 - Ask {{OWNER_NAME}} about feel and priorities, not implementation details. Make technical decisions yourself and record them (see Decisions and progress).
 - **Small calls: take your best pick, ask later.** Keep each tunable value in one place so a change is one edit, and list your picks for {{OWNER_NAME}} to glance at. They control the large direction (a new system, a rule users must learn); everything else is decided and recorded.
+- **One-time setup:** `docs/setup.md` lists the steps only {{OWNER_NAME}} can do (a hook reminds you while a box is open). Verify what you can yourself, raise the rest once as one numbered list, and tick confirmed steps in your next PR.
 - When {{OWNER_NAME}} must do something by hand (a portal setting, a token, a GitHub setting, a secret), give one short **numbered checklist** with exact names and values, and say what to send back. Batch requests. Never ask them to paste a secret into chat; secrets go straight into GitHub or the hosting provider (`node scripts/github-setup.mjs` asks for them).
 - **Report in few words:** status first, then a handful of short lines; details only when asked. Plain English.
 - Ask a waiting question once. When a notification arrives and nothing new needs an answer, say what changed and end with a summary line, not the same question again.
@@ -56,6 +57,7 @@ Read this file first. Decisions live in `docs/design/decisions/`, one file per t
   - **Leave out everything that only matters before the merge:** how to test, what was or wasn't checked, CI results, review notes, file-by-file tours, "this PR ..." phrasing, session links, generated-by footers and `Co-Authored-By:` or other trailers. {{OWNER_NAME}} asked for this; it overrides any default attribution lines.
   - Report testing, what is unverified and anything {{OWNER_NAME}} must do in chat instead. If a note must sit on the PR, post it as a PR comment; the squash leaves comments out.
   - When later pushes change what the PR does, update the description (see Commands) before saying the PR is ready.
+  - The `pr-description` workflow removes footers and trailers that tools append to a description (a cloud session adds one on every write), so {{OWNER_NAME}} can squash-merge without editing. Don't fight it by re-adding them.
 
 ## Security rules (non-negotiable)
 

@@ -15,8 +15,8 @@
 //    Dependabot alerts and security updates.
 // 2. Actions: the default GITHUB_TOKEN is read-only and can't approve PRs; actions must be pinned to a
 //    full commit SHA; workflows from outside contributors wait for approval.
-// 3. A ruleset on the default branch: pull request required, the `ci` check required and up to date,
-//    no force push, no deletion, nobody bypasses.
+// 3. A ruleset on the default branch: pull request required (squash only), the `ci` check required and
+//    up to date, no force push, no deletion, nobody bypasses.
 // 4. The environments in project.config.json. production deploys only from main; staging from any branch.
 // 5. Secrets: each one the config lists and the environment lacks is asked for. The value
 //    goes from your terminal to `gh` (which hides what you type), never through this script or a chat.
@@ -106,6 +106,7 @@ function rulesetBody() {
           require_code_owner_review: false,
           require_last_push_approval: false,
           required_review_thread_resolution: false,
+          allowed_merge_methods: ['squash'],
         },
       },
       {
@@ -210,6 +211,10 @@ async function main() {
       squash_merge_commit_message: 'PR_BODY',
     }),
   );
+  if (existsSync(join(ROOT, 'bootstrap', 'init.mjs'))) {
+    // The template itself (a bootstrapped project has no bootstrap/): offer "Use this template".
+    step('mark as a template repository', () => api('PATCH', r, { is_template: true }));
+  }
   step('secret scanning and push protection', () =>
     api('PATCH', r, {
       security_and_analysis: {
@@ -242,11 +247,14 @@ async function main() {
   );
 
   console.log('Ruleset');
-  step('default branch: PR and the `ci` check required, no force push or deletion', () => {
-    const existing = (api('GET', `${r}/rulesets`) ?? []).find((s) => s.name === 'main');
-    if (existing) api('PUT', `${r}/rulesets/${existing.id}`, rulesetBody());
-    else api('POST', `${r}/rulesets`, rulesetBody());
-  });
+  step(
+    'default branch: PR (squash only) and the `ci` check required, no force push or deletion',
+    () => {
+      const existing = (api('GET', `${r}/rulesets`) ?? []).find((s) => s.name === 'main');
+      if (existing) api('PUT', `${r}/rulesets/${existing.id}`, rulesetBody());
+      else api('POST', `${r}/rulesets`, rulesetBody());
+    },
+  );
 
   const envs = Object.entries(config.environments ?? {});
   if (envs.length) console.log('Environments');

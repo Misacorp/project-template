@@ -27,6 +27,7 @@ Sources: code.claude.com/docs/en/security · code.claude.com/docs/en/permissions
 - ✅ `persist-credentials: false` on every checkout.
 - ✅ Deploy secrets live in GitHub **environments**: `production` (deployable from `main` only)<!-- @if staging --> and `staging` (any branch, manual runs only)<!-- @endif -->. Pushing a branch deploys nothing, Dependabot's included.
 - ✅ No agent merges: the GitHub connection acts as {{OWNER_NAME}}'s account, so GitHub cannot tell an agent's merge from theirs. `.claude/settings.json` denies the merge and auto-merge tools and `gh pr merge`; the ruleset on `main` stops direct pushes for everyone.
+- ✅ The `pr-description` workflow is the one job with a write token on pull requests (`pull-requests: write`, to remove footers from descriptions). It skips fork PRs, runs only a dependency-free script, and edits only the description.
 - ✅ CI lints workflows with **actionlint** and audits them with **zizmor** (offline mode), and the `security` job is part of the required `ci` gate.
 - 👤 Repo settings: default `GITHUB_TOKEN` read-only and unable to approve PRs; actions must be pinned to a full SHA; approval required for workflows from outside contributors; ruleset on `main` (PR required, `ci` check required and up to date, no force push or deletion, no bypass).
 

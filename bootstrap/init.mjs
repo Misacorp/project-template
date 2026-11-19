@@ -246,7 +246,8 @@ async function main() {
   }
   steps.push(
     'git add -A && git commit -m "Bootstrap the project from the template" && git push',
-    'node scripts/github-setup.mjs   (environments, rules and secrets; needs the gh CLI, logged in)',
+    `node scripts/github-setup.mjs --user ${config.owner.github}   (rules, merge settings, environments, secrets; needs the gh CLI)`,
+    'The rest is in docs/setup.md; agents remind you while a step is open.',
   );
   console.log(`\nDone. Next:\n${steps.map((s, i) => `  ${i + 1}. ${s}`).join('\n')}`);
 }

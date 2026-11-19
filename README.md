@@ -27,10 +27,10 @@ A starting point for new projects: the process, CI, security and agent tooling f
 5. Apply the GitHub settings and set the secrets (needs the `gh` CLI, logged in as the repo owner):
 
    ```bash
-   node scripts/github-setup.mjs
+   node scripts/github-setup.mjs --user <your GitHub login>
    ```
 
-6. Fill in the TODOs in `CLAUDE.md` and `docs/progress.md`.
+6. The remaining one-time steps are in the new project's `docs/setup.md`. Agents remind you of open ones at the start of a session, so you don't have to remember them.
 
 Templates copy files only: GitHub never copies environments, secrets, variables, rulesets or settings. That is why step 5 exists. Re-run it any time; it only changes what differs.
 
