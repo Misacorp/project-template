@@ -50,20 +50,12 @@ Read this file first. Decisions live in `docs/design/decisions/`, one file per t
 - **Before telling {{OWNER_NAME}} a PR is ready,** merge the latest `main` into the branch and check the PR is mergeable. GitHub runs no CI on a PR with a merge conflict, so a conflicted PR looks quiet, not red. Right after the merge run the format check first (seconds), before any long check.
 - **Batch work into fewer PRs:** agents may use several local branches, but merge finished work together locally and open one PR. Large PRs are fine; each commit inside should still be one coherent change.
 - **Other repositories:** only open PRs there; {{OWNER_NAME}} merges them. Never push to their default branch.
-- Every PR description has:
-  1. What the PR does, in simple technical English (a few short paragraphs or a list).
-  2. How {{OWNER_NAME}} can test it (if anything to test).
-  3. A final section titled **Squash merge message** with a 1–4 sentence commit message in simple technical English.
-
-<!-- @if cloudflare-web -->
-
-- Changes to `.github/`, `.claude/`, `CLAUDE.md`, `docs/security.md`, `project.config.json`, `scripts/github-setup.mjs`, `wrangler.jsonc` or dependency manifests must be called out explicitly in the PR description.
-
-<!-- @else -->
-
-- Changes to `.github/`, `.claude/`, `CLAUDE.md`, `docs/security.md`, `project.config.json`, `scripts/github-setup.mjs` or dependency manifests must be called out explicitly in the PR description.
-
-<!-- @endif -->
+- **The PR title and description become the squash commit.** The repo only allows squash merges and uses the PR title and description as the commit message (`scripts/github-setup.mjs` sets this), so `main`'s history is one commit per PR. Write both for someone reading `git log` a year from now:
+  - **Title:** what the change does, imperative, under about 70 characters ("Add weekly digest emails"). GitHub adds the PR number.
+  - **Description:** what changed and why, in simple technical English, as long as the change needs and no longer: a sentence or a short paragraph, or a short list when the PR has several parts. Name changes to automation, agent config, security or dependencies (`.github/`, `.claude/`, `CLAUDE.md`, `docs/security.md`, `project.config.json`, `scripts/github-setup.mjs`<!-- @if cloudflare-web -->, `wrangler.jsonc`<!-- @endif -->, dependency manifests) as part of what changed.
+  - **Leave out everything that only matters before the merge:** how to test, what was or wasn't checked, CI results, review notes, file-by-file tours, "this PR ..." phrasing, session links and generated-by footers. A `Co-Authored-By:` trailer at the end is fine.
+  - Report testing, what is unverified and anything {{OWNER_NAME}} must do in chat instead. If a note must sit on the PR, post it as a PR comment; the squash leaves comments out.
+  - When later pushes change what the PR does, update the description (see Commands) before saying the PR is ready.
 
 ## Security rules (non-negotiable)
 

@@ -10,7 +10,8 @@
 //
 // It first checks that the account is an admin of the repository, and stops if not.
 //
-// 1. Repository: delete branches after merge; no auto-merge; secret scanning and push protection;
+// 1. Repository: squash merges only, with the PR title and description as the commit (CLAUDE.md, Pull
+//    requests); delete branches after merge; no auto-merge; secret scanning and push protection;
 //    Dependabot alerts and security updates.
 // 2. Actions: the default GITHUB_TOKEN is read-only and can't approve PRs; actions must be pinned to a
 //    full commit SHA; workflows from outside contributors wait for approval.
@@ -199,6 +200,15 @@ async function main() {
   console.log('Repository');
   step('delete branches after merge, no auto-merge', () =>
     api('PATCH', r, { delete_branch_on_merge: true, allow_auto_merge: false }),
+  );
+  step('squash merges only, with the PR title and description as the commit message', () =>
+    api('PATCH', r, {
+      allow_squash_merge: true,
+      allow_merge_commit: false,
+      allow_rebase_merge: false,
+      squash_merge_commit_title: 'PR_TITLE',
+      squash_merge_commit_message: 'PR_BODY',
+    }),
   );
   step('secret scanning and push protection', () =>
     api('PATCH', r, {
