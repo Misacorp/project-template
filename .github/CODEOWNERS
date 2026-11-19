@@ -1,0 +1,6 @@
+# Changes to automation, agent config and security need the owner's eye on the PR description.
+/.github/            @{{OWNER_GITHUB}}
+/.claude/            @{{OWNER_GITHUB}}
+/CLAUDE.md           @{{OWNER_GITHUB}}
+/docs/security.md    @{{OWNER_GITHUB}}
+/scripts/github-setup.mjs @{{OWNER_GITHUB}}

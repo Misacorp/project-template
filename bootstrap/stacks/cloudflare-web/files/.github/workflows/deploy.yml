@@ -1,0 +1,128 @@
+name: deploy
+
+# Production: every push to main (a merged PR) deploys production. Nothing else can.
+# @if staging
+# Staging: only a manual run. In GitHub, Actions -> deploy -> "Run workflow", pick the branch to put on
+# staging. Pushing a branch deploys nothing, so two branches never race for staging. A manual run always
+# deploys staging, even when main is picked (that resets staging to main).
+# Agents may start a manual run only when the owner asks in that session (see CLAUDE.md).
+# @else
+# A manual run on main redeploys production (for example after a secret changed); on any other branch it
+# fails.
+# @endif
+# Fork pull requests never trigger this workflow (they only trigger `pull_request` in ci.yml), so they never
+# see these secrets. Secrets live in the GitHub environment of each target (scripts/github-setup.mjs).
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  deploy:
+    # @if staging
+    name: deploy (${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'production' || 'staging' }})
+    # @else
+    name: deploy (production)
+    # @endif
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    # @if staging
+    environment:
+      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+      url: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'https://{{PRODUCTION_HOST}}' || 'https://{{STAGING_HOST}}' }}
+    concurrency:
+      group: deploy-${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+      cancel-in-progress: ${{ !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+    env:
+      TARGET_ENV: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+    # @else
+    environment:
+      name: production
+      url: https://{{PRODUCTION_HOST}}
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    env:
+      TARGET_ENV: production
+    # @endif
+    steps:
+      # Belt and braces: fail loudly if the target ever stops matching the trigger (for example after an
+      # edit to the expressions above).
+      - name: Guard the target
+        env:
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+        run: |
+          # @if staging
+          if [ "$TARGET_ENV" = "production" ] && { [ "$EVENT" != "push" ] || [ "$REF" != "refs/heads/main" ]; }; then
+            echo "::error::Production deploys only from a push to main (got $EVENT on $REF)."
+            exit 1
+          fi
+          if [ "$TARGET_ENV" = "staging" ] && [ "$EVENT" != "workflow_dispatch" ]; then
+            echo "::error::Staging deploys only from a manual run (got $EVENT)."
+            exit 1
+          fi
+          if [ "$TARGET_ENV" != "production" ] && [ "$TARGET_ENV" != "staging" ]; then
+            echo "::error::Unknown target '$TARGET_ENV'."
+            exit 1
+          fi
+          # @else
+          if [ "$TARGET_ENV" != "production" ] || [ "$REF" != "refs/heads/main" ]; then
+            echo "::error::Production deploys only from main (got $EVENT on $REF)."
+            exit 1
+          fi
+          # @endif
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # No test step: the main ruleset requires the `ci` check and branches up to date before merging, so the
+      # merged tree is exactly the tree PR CI tested.
+
+      - run: pnpm build
+
+      # wrangler runs from our own lockfile, not a third-party deploy action, so the Cloudflare token is only
+      # handed to code we pinned (docs/security.md).
+      - name: Deploy Worker
+        working-directory: apps/worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          GIT_SHA: ${{ github.sha }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          missing=""
+          for name in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID; do
+            if [ -z "${!name}" ]; then missing="$missing $name"; fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Missing secrets in the '$TARGET_ENV' GitHub environment:$missing (run node scripts/github-setup.mjs)"
+            exit 1
+          fi
+          # Git ref names have no spaces or colons; anything outside this plain set is shown as "unknown".
+          if ! [[ "$BRANCH" =~ ^[A-Za-z0-9._/-]{1,100}$ ]]; then BRANCH="unknown"; fi
+          # Worker secrets: add each to the environment's `secrets` in project.config.json, map it into `env:`
+          # above, write them to a temp JSON file and pass --secrets-file (never --var, which is public).
+          pnpm exec wrangler deploy --env "$TARGET_ENV" --var "VERSION:${GIT_SHA}" --var "BRANCH:${BRANCH}"
+
+      # Reads back what is live (the public /api/config) and fails the run unless it is this commit, so a green
+      # run means users get exactly this build. Retries for up to two minutes.
+      - name: Check the deployed commit
+        env:
+          GIT_SHA: ${{ github.sha }}
+        run: node scripts/deployed.mjs --env "$TARGET_ENV" --expect "$GIT_SHA" --wait 120

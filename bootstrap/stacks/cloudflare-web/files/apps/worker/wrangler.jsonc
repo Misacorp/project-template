@@ -1,0 +1,49 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "{{PROJECT_SLUG}}",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "observability": { "enabled": true },
+  // The Worker serves the built frontend; only /api/* runs the Worker's code.
+  "assets": {
+    "directory": "../web/dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  // Secrets are set by CI (deploy.yml, from the GitHub environment) or in .dev.vars locally; never committed.
+  // VERSION and BRANCH are overridden at deploy time: wrangler deploy --var VERSION:<git sha>
+  // --var BRANCH:<branch name>. /api/config shows them, and scripts/deployed.mjs reads them back.
+  // Vars are not inherited by environments: a var added here is added to each environment below too.
+  "vars": {
+    "ENVIRONMENT": "local",
+    "VERSION": "dev",
+    "BRANCH": "dev"
+  },
+  "env": {
+    // @if staging
+    "staging": {
+      "name": "{{PROJECT_SLUG}}-staging",
+      "workers_dev": false,
+      "preview_urls": false,
+      "routes": [{ "pattern": "{{STAGING_HOST}}", "custom_domain": true }],
+      "vars": {
+        "ENVIRONMENT": "staging",
+        "VERSION": "dev",
+        "BRANCH": "dev"
+      }
+    },
+    // @endif
+    "production": {
+      "name": "{{PROJECT_SLUG}}",
+      "workers_dev": false,
+      "preview_urls": false,
+      "routes": [{ "pattern": "{{PRODUCTION_HOST}}", "custom_domain": true }],
+      "vars": {
+        "ENVIRONMENT": "production",
+        "VERSION": "dev",
+        "BRANCH": "dev"
+      }
+    }
+  }
+}

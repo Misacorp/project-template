@@ -1,0 +1,3 @@
+# Append-only logs: every branch adds its entry at the end, so a merge keeps both sides' lines instead of
+# conflicting. After a merge, check the order and that a blank line still separates the entries.
+docs/retros/*.md merge=union
