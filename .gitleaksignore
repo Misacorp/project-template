@@ -1,0 +1,2 @@
+# False positives of the CI secret scan, by fingerprint (commit:file:rule:line). Only test fixtures belong here,
+# each with a comment saying what the value really is.

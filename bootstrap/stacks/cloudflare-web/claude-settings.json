@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(~/.wrangler/**)",
+      "Bash(wrangler deploy*)",
+      "Bash(wrangler secret*)",
+      "Bash(wrangler login*)",
+      "Bash(npx wrangler deploy*)",
+      "Bash(npx wrangler secret*)",
+      "Bash(pnpm exec wrangler deploy*)",
+      "Bash(pnpm exec wrangler secret*)"
+    ]
+  }
+}

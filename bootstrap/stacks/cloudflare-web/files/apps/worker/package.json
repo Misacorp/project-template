@@ -1,0 +1,19 @@
+{
+  "name": "@{{PROJECT_SLUG}}/worker",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "types": "wrangler types --strict-vars=false",
+    "build": "wrangler deploy --dry-run --env production --outdir dist",
+    "typecheck": "pnpm types && tsc --noEmit -p tsconfig.json",
+    "lint": "pnpm types && eslint --cache --cache-strategy content --cache-location node_modules/.cache/eslint/ .",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "vitest": "catalog:",
+    "wrangler": "catalog:"
+  }
+}

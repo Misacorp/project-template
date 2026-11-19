@@ -1,0 +1,17 @@
+[
+  {
+    "id": "direction",
+    "title": "Direction and process",
+    "scope": "Priorities, how the owner and agents work, naming and tone."
+  },
+  {
+    "id": "platform",
+    "title": "Platform and tooling",
+    "scope": "Hosting, CI and deploys, environments, dependencies, security, dev tools."
+  },
+  {
+    "id": "product",
+    "title": "Product",
+    "scope": "Features, UX and behaviour the users see."
+  }
+]
